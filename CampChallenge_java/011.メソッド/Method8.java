@@ -7,6 +7,8 @@ package org.camp.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -29,20 +31,51 @@ public class Method8 extends HttpServlet {
      * @throws ServletException if a servlet-specific error occurs
      * @throws IOException if an I/O error occurs
      */
+    
+    String[] userProfile  (int num){
+        String [] data1 = {"1","技育太郎","東京","男","プログラマー"};  
+        String [] data2 = {"2","技育花子","北海道","女","システムエンジニア"};
+        String [] data3 = {"3","技育三郎","大阪","男","Webエンジニア"};
+    
+        if(num == Integer.parseInt(data1[0])){
+            return data1;
+        
+        }else if(num == Integer.parseInt(data2[0])){
+            return data2;
+        
+        }else if(num == Integer.parseInt(data3[0])){
+            return data3;
+        
+        }else{
+            return null;
+        }
+    }
+    
+    
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet Method8</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet Method8 at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+        
+        
+        for(int i = 1; i < 4; i++){
+            out.print(Arrays.toString(userProfile(i)));
+            /*
+            switch(i){
+                case 1:
+                    out.print(userProfile(1));
+                    break;
+                case 2:
+                    out.print(userProfile(2));
+                    break;
+                case 3:
+                    out.print(userProfile(3));
+                    break;
+            }
+            */
+        }
+
         }
     }
 
