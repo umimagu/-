@@ -1,8 +1,11 @@
+<%@page import="java.util.ArrayList"%>
 <%@page import="jums.JumsHelper"
         import="jums.UserDataDTO" %>
 <%
     JumsHelper jh = JumsHelper.getInstance();
-    UserDataDTO udd = (UserDataDTO)request.getAttribute("resultData");
+    HttpSession hs = request.getSession();
+    UserDataDTO udd = (UserDataDTO)hs.getAttribute("data");
+    
 %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
@@ -19,11 +22,16 @@
         電話番号:<%= udd.getTell()%><br>
         自己紹介:<%= udd.getComment()%><br>
         登録日時:<%= udd.getNewDate()%><br>
+        
         <form action="Update" method="POST">
-        <input type="submit" name="update" value="変更"style="width:100px">
+        <input type="submit" name="update" value="変更" style="width:100px">
         </form>
+        
         <form action="Delete" method="POST">
-        <input type="submit" name="delete" value="削除"style="width:100px">
+        <input type="submit" name="delete" value="削除" style="width:100px">
         </form>
+        
+        <button type="button" onclick="history.back()">検索結果画面に戻る</button>
     </body>
+    <%=jh.home()%>
 </html>

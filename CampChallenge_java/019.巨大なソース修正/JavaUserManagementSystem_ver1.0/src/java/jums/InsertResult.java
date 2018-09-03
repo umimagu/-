@@ -1,7 +1,6 @@
 package jums;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Calendar;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -10,9 +9,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
- * insertresultと対応するサーブレット
- * フォームから入力された値をセッション経由で受け取り、データベースにinsertする
+ * insertresultと対応するサーブレット フォームから入力された値をセッション経由で受け取り、データベースにinsertする
  * 直接アクセスした場合はerror.jspに振り分け
+ *
  * @author hayashi-s
  */
 public class InsertResult extends HttpServlet {
@@ -28,27 +27,62 @@ public class InsertResult extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         //セッションスタート
         HttpSession session = request.getSession();
-        
-        try{
+
+        try {
+            request.setCharacterEncoding("UTF-8");//セッションに格納する文字コードをUTF-8に変更
+            String accesschk = request.getParameter("ac");
+            if (accesschk == null || (Integer) session.getAttribute("ac") != Integer.parseInt(accesschk)) {
+                throw new Exception("不正なアクセスです");
+            }
+        } catch (Exception e) {
+            request.setAttribute("error", e.getMessage());
+            request.getRequestDispatcher("/error.jsp").forward(request, response);
+        }
+
+        try {
             //ユーザー情報に対応したJavaBeansオブジェクトに格納していく
             UserDataDTO userdata = new UserDataDTO();
-            userdata.setName((String)session.getAttribute("name"));
+            UserDataBeans udb = (UserDataBeans)session.getAttribute("UDB");
+            //new udbじゃなくて、セッションで引き継がないといけなかったんだ！！！！
+
+            userdata.setName(udb.getName());
+
+            //日付
+            String year = udb.getYear();
+            String month = udb.getMonth();
+            String day = udb.getDay();
+            
+            int a = Integer.parseInt(year);
+            int b = Integer.parseInt(month);
+            int c = Integer.parseInt(day);
+            
             Calendar birthday = Calendar.getInstance();
+            birthday.set(a,b,c);
             userdata.setBirthday(birthday.getTime());
-            userdata.setType(Integer.parseInt((String)session.getAttribute("type")));
-            userdata.setTell((String)session.getAttribute("tell"));
-            userdata.setComment((String)session.getAttribute("comment"));
             
+            //職種・電話番号・コメント
+            userdata.setType(udb.getType());
+            userdata.setTell(udb.getTell());
+            userdata.setComment(udb.getComment());
+
             //DBへデータの挿入
-            UserDataDAO .getInstance().insert(userdata);
+            UserDataDAO.getInstance().insert(userdata);
             
+            //udbをinsertresult.jspへ送る
+            session.setAttribute("UDB", udb);
             request.getRequestDispatcher("/insertresult.jsp").forward(request, response);
-        }catch(Exception e){
+            
+            //セッション破棄
+            session.removeAttribute("UDB");
+            session.removeAttribute("ac");
+            
+        } catch (Exception e) {
             //データ挿入に失敗したらエラーページにエラー文を渡して表示
             request.setAttribute("error", e.getMessage());
+            
             request.getRequestDispatcher("/error.jsp").forward(request, response);
         }
     }

@@ -1,3 +1,4 @@
+
 package jums;
 
 import base.DBManager;
@@ -7,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 
 /**
  * ユーザー情報を格納するテーブルに対しての操作処理を包括する
@@ -48,7 +50,6 @@ public class UserDataDAO {
                 con.close();
             }
         }
-
     }
     
     /**
@@ -57,53 +58,63 @@ public class UserDataDAO {
      * @throws SQLException 呼び出し元にcatchさせるためにスロー 
      * @return 検索結果
      */
-    public UserDataDTO search(UserDataDTO ud) throws SQLException{
+    public ArrayList<UserDataDTO> search(UserDataDTO ud) throws SQLException{//searchメソッド
         Connection con = null;
         PreparedStatement st = null;
+        
         try{
             con = DBManager.getConnection();
-            
-            //
+           
             String sql = "SELECT * FROM user_t";
             boolean flag = false;
+            
             if (!ud.getName().equals("")) {
-                sql += " WHERE name like ?";
+                sql += " WHERE name like " + "\"" + ud.getName() + "\"";
                 flag = true;
             }
             if (ud.getBirthday()!=null) {
                 if(!flag){
-                    sql += " WHERE birthday like ?";
+                    sql += " WHERE birthday like" + "\"%"+ new SimpleDateFormat("yyyy").format(ud.getBirthday())+"%\"";
                     flag = true;
                 }else{
-                    sql += " AND birthday like ?";
+                    sql += " AND birthday like" + "\"%"+ new SimpleDateFormat("yyyy").format(ud.getBirthday())+"%\"";
                 }
             }
             if (ud.getType()!=0) {
                 if(!flag){
-                    sql += " WHERE type like ?";
+                    sql += " WHERE type like" + "\"" + ud.getType()+ "\"";
                 }else{
-                    sql += " AND type like ?";
+                    sql += " AND type like" + "\""+ud.getType()+ "\"";
                 }
             }
-            st =  con.prepareStatement(sql);
-            st.setString(1, "%"+ud.getName()+"%");
-            st.setString(2, "%"+ new SimpleDateFormat("yyyy").format(ud.getBirthday())+"%");
-            st.setInt(3, ud.getType());
+            
+            sql += ";";
+            
+            st = con.prepareStatement(sql);
+            //st.setString(1, "%"+ud.getName()+"%");
+            //st.setString(2, "%"+ new SimpleDateFormat("yyyy").format(ud.getBirthday())+"%");
+            //st.setInt(3, ud.getType());
             
             ResultSet rs = st.executeQuery();
-            rs.next();
-            UserDataDTO resultUd = new UserDataDTO();
-            resultUd.setUserID(rs.getInt(1));
-            resultUd.setName(rs.getString(2));
-            resultUd.setBirthday(rs.getDate(3));
-            resultUd.setTell(rs.getString(4));
-            resultUd.setType(rs.getInt(5));
-            resultUd.setComment(rs.getString(6));
-            resultUd.setNewDate(rs.getTimestamp(7));
+            System.out.println(rs);
             
+            ArrayList<UserDataDTO> array = new ArrayList();
+            System.out.println(rs.next());
+            while(rs.next()){
+                UserDataDTO resultUd = new UserDataDTO();
+                resultUd.setUserID(rs.getInt(1));
+                resultUd.setName(rs.getString(2));
+                resultUd.setBirthday(rs.getDate(3));
+                resultUd.setTell(rs.getString(4));
+                resultUd.setType(rs.getInt(5));
+                resultUd.setComment(rs.getString(6));
+                resultUd.setNewDate(rs.getTimestamp(7));
+                array.add(resultUd);
+            }
             System.out.println("search completed");
-
-            return resultUd;
+            con.close();//Connection変数
+            return array;
+            
         }catch(SQLException e){
             System.out.println(e.getMessage());
             throw new SQLException(e);
@@ -112,7 +123,6 @@ public class UserDataDAO {
                 con.close();
             }
         }
-
     }
     
     /**
@@ -124,11 +134,11 @@ public class UserDataDAO {
     public UserDataDTO searchByID(UserDataDTO ud) throws SQLException{
         Connection con = null;
         PreparedStatement st = null;
+        
         try{
             con = DBManager.getConnection();
             
             String sql = "SELECT * FROM user_t WHERE userID = ?";
-            
             st =  con.prepareStatement(sql);
             st.setInt(1, ud.getUserID());
             
@@ -154,6 +164,63 @@ public class UserDataDAO {
                 con.close();
             }
         }
-
+    }
+        /**
+     * ユーザーIDによる1件のデータの更新処理を行う。
+     * @param ud 対応したデータを保持しているJavaBeans
+     * @throws SQLException 呼び出し元にcatchさせるためにスロー 
+     * @return 更新結果
+     */
+    public void update(UserDataDTO ud) throws SQLException{
+        Connection con = null;
+            PreparedStatement st = null;
+        try {
+            con = DBManager.getConnection();
+            
+            String sql ="UPDATE user_t SET name=?,birthday=?,tell=?,type=?,comment=?,newDate=? where userID=?;";
+            st = con.prepareStatement(sql);
+            
+            st.setString(1, ud.getName());
+            st.setDate(2, new java.sql.Date(ud.getBirthday().getTime()));//指定のタイムスタンプ値からSQL格納用のDATE型に変更
+            st.setString(3, ud.getTell());
+            st.setInt(4, ud.getType());
+            st.setString(5, ud.getComment());
+            st.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
+            st.setInt(7, ud.getUserID());
+            
+            st.executeUpdate();
+            
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            
+        } finally {
+            con.close();
+        }
+    }
+        /**
+     * ユーザーIDによる1件のデータの削除処理を行う。
+     * @param ud 対応したデータを保持しているJavaBeans
+     * @throws SQLException 呼び出し元にcatchさせるためにスロー 
+     * @return 削除結果
+     */
+    public void delete(UserDataDTO ud) throws SQLException{
+        Connection con = null;
+            PreparedStatement st = null;
+        try {
+            con = DBManager.getConnection();
+            
+            String sql ="DELETE FROM user_t WHERE userID=?;";
+            st = con.prepareStatement(sql);
+            
+            st.setInt(1, ud.getUserID());
+            
+            st.executeUpdate();
+            
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            con.close();
+        }
     }
 }
+

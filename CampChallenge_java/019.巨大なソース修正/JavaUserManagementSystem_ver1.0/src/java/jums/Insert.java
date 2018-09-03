@@ -24,6 +24,8 @@ public class Insert extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
+        //セッションac生成。３桁の乱数を持つ。アクセスチェックの役割。これがないと不正アクセスになる。
         HttpSession session = request.getSession();
         session.setAttribute("ac", (int) (Math.random() * 1000));
         request.getRequestDispatcher("/insert.jsp").forward(request, response);   

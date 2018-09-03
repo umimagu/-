@@ -27,33 +27,41 @@ public class InsertConfirm extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try{
-            HttpSession session = request.getSession();
+            HttpSession session = request.getSession();//セッション
             request.setCharacterEncoding("UTF-8");//セッションに格納する文字コードをUTF-8に変更
             String accesschk = request.getParameter("ac");
-            if(accesschk ==null || (Integer)session.getAttribute("ac")!=Integer.parseInt(accesschk)){
+            if(accesschk == null || (Integer)session.getAttribute("ac")!= Integer.parseInt(accesschk)){
                 throw new Exception("不正なアクセスです");
             }
             
             //フォームからの入力を取得
+            UserDataBeans udb = new UserDataBeans();
             String name = request.getParameter("name");
             String year = request.getParameter("year");
             String month = request.getParameter("month");
             String day = request.getParameter("day");
-            String type = request.getParameter("type");
+            String type1 = request.getParameter("type");
             String tell = request.getParameter("tell");
             String comment = request.getParameter("comment");
-
-            //セッションに格納
-            session.setAttribute("name", name);
-            session.setAttribute("year", year);
-            session.setAttribute("month",month);
-            session.setAttribute("day", day);
-            session.setAttribute("type", type);
-            session.setAttribute("tell", tell);
-            session.setAttribute("comment", comment);
-            System.out.println("Session updated!!");
             
+            int type = Integer.parseInt(type1);
+            
+            //udbに格納
+            udb.setName(name);
+            udb.setYear(year);
+            udb.setMonth(month);
+            udb.setDay(day);
+            udb.setType(type);
+            udb.setTell(tell);
+            udb.setComment(comment);
+            System.out.println(udb.getName());
+            //udbをinsertcomfirm.jspへ送る
+//            request.setAttribute("UDB",udb);
+            session.setAttribute("UDB", udb);
+            //セッション　→ 何回でも取り出せる。今回はこちらを使う。
+            //リクエスト　→ 一回しか取り出せない
             request.getRequestDispatcher("/insertconfirm.jsp").forward(request, response);
+            
         }catch(Exception e){
             request.setAttribute("error", e.getMessage());
             request.getRequestDispatcher("/error.jsp").forward(request, response);

@@ -135,6 +135,7 @@ public class UserDataBeans implements Serializable{
         return chkList;
     }
 
+    
     public void UD2DTOMapping(UserDataDTO udd){
         udd.setName(this.name);
         if(this.year != 0 || this.month != 0 || this.day != 0){

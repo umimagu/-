@@ -48,7 +48,7 @@ public class InsertConfirm extends HttpServlet {
             udb.setType(request.getParameter("type"));
             udb.setTell(request.getParameter("tell"));
             udb.setComment(request.getParameter("comment"));
-
+            
             //ユーザー情報群をセッションに格納
             session.setAttribute("udb", udb);
             System.out.println("Session updated!!");

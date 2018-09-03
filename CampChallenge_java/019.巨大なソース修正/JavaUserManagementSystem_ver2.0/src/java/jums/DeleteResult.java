@@ -2,10 +2,13 @@ package jums;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -26,17 +29,30 @@ public class DeleteResult extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         PrintWriter out = response.getWriter();
+        
+        HttpSession hs = request.getSession();
+        
+        
         try {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet DeleteResult</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet DeleteResult at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+            
+            UserDataDTO deleteData = (UserDataDTO)hs.getAttribute("data");
+            deleteData.setUserID(Integer.parseInt(request.getParameter("userID")));
+            UserDataDAO.getInstance().delete(deleteData);
+            
+            ArrayList<UserDataDTO> resultData = (ArrayList<UserDataDTO>)hs.getAttribute("resultData");
+            for(int i = 0; i < resultData.size(); i++){
+                if(resultData.get(i).getUserID() == deleteData.getUserID() ){
+                    resultData.remove(i);
+                    hs.setAttribute("data","");
+                    break;
+                }
+            }  
+            request.getRequestDispatcher("/deleteresult.jsp").forward(request, response);
+        
+        }catch(SQLException e){
+            request.setAttribute("error", e.getMessage());
+            request.getRequestDispatcher("/error.jsp").forward(request, response);
+            
         } finally {
             out.close();
         }

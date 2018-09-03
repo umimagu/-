@@ -9,6 +9,7 @@
     <body>
         エラーが発生しました。以下の項目を確認してください。<br>
         <%=request.getAttribute("error")%><br><br>
+        <button type="button" onclick="history.back()">戻る</button><br><br>
         <%=JumsHelper.getInstance().home()%>
     </body>
 </html>

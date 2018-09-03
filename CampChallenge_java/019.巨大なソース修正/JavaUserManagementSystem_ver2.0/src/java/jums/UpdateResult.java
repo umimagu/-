@@ -1,11 +1,15 @@
 package jums;
 
+import base.DBManager;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.sql.*;
+import java.util.ArrayList;
+import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -26,17 +30,63 @@ public class UpdateResult extends HttpServlet {
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         PrintWriter out = response.getWriter();
+        request.setCharacterEncoding("UTF-8");
+        
+        HttpSession hs = request.getSession();
+        
         try {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet UpdateResult</title>");            
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet UpdateResult at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+            //フォームからの入力を取得して、JavaBeansに格納
+            UserDataBeans udb = new UserDataBeans();
+            udb.setName(request.getParameter("name"));
+            udb.setYear(request.getParameter("year"));
+            udb.setMonth(request.getParameter("month"));
+            udb.setDay(request.getParameter("day"));
+            udb.setType(request.getParameter("type"));
+            udb.setTell(request.getParameter("tell"));
+            udb.setComment(request.getParameter("comment"));
+            
+            //DTOオブジェクトにマッピング。DB専用のパラメータに変換
+            UserDataDTO updateData = new UserDataDTO();
+            udb.UD2DTOMapping(updateData);
+            updateData.setUserID(Integer.parseInt(request.getParameter("userID")));
+            //update 実行
+            UserDataDAO.getInstance().update(updateData);
+            updateData = UserDataDAO.getInstance().searchByID(updateData);
+            
+            //resultdataをセッションから受け取る
+            ArrayList<UserDataDTO> resultData = (ArrayList<UserDataDTO>)hs.getAttribute("resultData");
+            //for文でlistのi番目の要素を順に取っていきたい、listの中のDTOの中のidを取得したい、
+            //if文中　その取得したidがurlから取得したidと一致していた場合==、
+            //dtoにi番目の要素のlistに入ってるDTOインスタンスを代入する
+            for(int i = 0; i < resultData.size(); i++){
+                if(resultData.get(i).getUserID() == updateData.getUserID() ){
+                    resultData.set(i,updateData);
+                    hs.setAttribute("data",resultData.get(i));
+                    break;
+                }
+            }  
+            String str = updateData.getBirthday().toString();
+            String[] s = str.split("-");
+            
+            udb.setName(updateData.getName());
+            udb.setYear(s[0]);
+            udb.setMonth(s[1]);
+            udb.setDay(s[2]);
+            udb.setTell(updateData.getTell());
+            udb.setType(String.valueOf(updateData.getType()));
+            udb.setComment(updateData.getComment());
+            //セッションで送ってあげる
+            hs.setAttribute("udb",udb);
+            
+            //ユーザー情報群をセッションに格納
+            hs.setAttribute("data", updateData);
+            System.out.println("Session updated!!");
+            
+            request.getRequestDispatcher("/updateresult.jsp").forward(request, response);
+        }catch(SQLException e){
+            request.setAttribute("error", e.getMessage());
+            request.getRequestDispatcher("/error.jsp").forward(request, response);
+            
         } finally {
             out.close();
         }
